@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Composer from "@/components/Composer";
 
 export default function Home() {
   return (
@@ -36,6 +37,7 @@ interface CommentProps {
 const Comment = ({ node, depth = 0, maxDepth = 3 }: CommentProps) => {
   const [showReplies, setShowReplies] = useState(false);
   const childCount = countAllReplies(node);
+  const [composer, setComposer] = useState(false);
 
   return (
     <div className="comment relative">
@@ -52,7 +54,7 @@ const Comment = ({ node, depth = 0, maxDepth = 3 }: CommentProps) => {
           </div>
           <div className="comment-footer">
             <span>Like</span>
-            <span>Reply</span>
+            <span onClick={() => setComposer(!composer)}>Reply</span>
 
             {childCount > 0 && showReplies && (
               <span
@@ -109,6 +111,8 @@ const Comment = ({ node, depth = 0, maxDepth = 3 }: CommentProps) => {
           )} */}
         </AnimatePresence>
       ) : null}
+
+      {composer && <Composer />}
     </div>
   );
 };

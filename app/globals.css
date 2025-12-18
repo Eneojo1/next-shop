@@ -104,3 +104,7 @@ body {
 .comment-footer span {
   cursor: pointer;
 }
+
+.no-entry {
+  cursor: url("../components/no-entry.svg") 16 16, not-allowed;
+}

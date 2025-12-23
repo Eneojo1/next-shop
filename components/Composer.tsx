@@ -1,20 +1,20 @@
-import {
-  ReactEventHandler,
-  ReactNode,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import EmojiPicker from "emoji-picker-react";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import EmojiPicker, { Theme } from "emoji-picker-react";
 import {
   Camera,
   CheckSquare,
   Image,
-  Send,
   SendHorizonal,
   Smile,
   Square,
 } from "lucide-react";
+import {
+  autoUpdate,
+  flip,
+  offset,
+  shift,
+  useFloating,
+} from "@floating-ui/react";
 
 interface FormDataType {
   user_id: number | null;
@@ -31,13 +31,17 @@ export default function Composer() {
   const mediaRef = useRef<HTMLInputElement | null>(null);
   const mojRef = useRef<HTMLDivElement | null>(null);
 
-  const [emojiPosition, setEmojiPosition] = useState({ x: 0, y: 0 });
   const [anonymous, setAnonymous] = useState(false);
   const [openEmoji, setOpenEmoji] = useState(false);
   const [cursorPos, setCursorPos] = useState(0);
   const [activeField, setActiveField] = useState<"comment" | "guest" | null>(
     null
   );
+  const { refs, floatingStyles } = useFloating({
+    placement: "bottom-start",
+    middleware: [offset(8), flip(), shift({ padding: 8 })],
+    whileElementsMounted: autoUpdate,
+  });
 
   const [formData, setFormData] = useState<FormDataType>({
     user_id: null,
@@ -66,29 +70,6 @@ export default function Composer() {
     }));
 
     e.target.value = ""; // allow re-select same file
-  };
-
-  const updateEmojiPosition = () => {
-    const textarea = msgRef.current;
-    if (!textarea) return;
-
-    const rect = textarea.getBoundingClientRect();
-    const pickerHeight = 300; // approximate emoji picker height
-    const viewportHeight = window.innerHeight;
-
-    // If not enough space below, show above
-    const top =
-      rect.bottom + pickerHeight > viewportHeight
-        ? rect.top - pickerHeight
-        : rect.bottom;
-
-    setEmojiPosition({ x: rect.left, y: top });
-  };
-
-  // Open emoji picker
-  const handleOpenEmoji = () => {
-    updateEmojiPosition();
-    setOpenEmoji(true);
   };
 
   const onEmojiClick = (emojiData: any) => {
@@ -122,26 +103,13 @@ export default function Composer() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  useEffect(() => {
-    if (!openEmoji) return;
-
-    const handle = () => updateEmojiPosition();
-    window.addEventListener("resize", handle);
-    window.addEventListener("scroll", handle, true); // capture scroll in parent containers
-
-    return () => {
-      window.removeEventListener("resize", handle);
-      window.removeEventListener("scroll", handle, true);
-    };
-  }, [openEmoji]);
-
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log(formData);
   };
 
   return (
-    <form className="bg-slate-100" onSubmit={onSubmit}>
+    <form className="bg-slate-100 relative" onSubmit={onSubmit}>
       <input
         ref={mediaRef}
         type="file"
@@ -167,20 +135,6 @@ export default function Composer() {
         onChange={handleChange}
         onFocus={() => setActiveField("comment")}
       />
-      {openEmoji && (
-        <div
-          ref={mojRef}
-          style={{
-            position: "absolute",
-            zIndex: 10,
-            top: 0,
-            left: 0,
-            transform: `translate(${emojiPosition.x}px, ${emojiPosition.y}px)`,
-          }}
-        >
-          <EmojiPicker onEmojiClick={onEmojiClick} />
-        </div>
-      )}
 
       <div className="stickers grid grid-cols-4 gap-2 absolute z-10">
         {["🎨", "✏️", "🧩", "🔁"].map((st) => (
@@ -202,10 +156,28 @@ export default function Composer() {
 
       <div className="flex justify-between [&_span]:cursor-pointer text-red-500">
         <div className="flex gap-2">
-          {/* <span onClick={() => setOpenEmoji(true)}> */}
-          <span onClick={handleOpenEmoji}>
-            <Smile size={20} />
-          </span>
+          <div ref={mojRef}>
+            <span
+              onClick={() => setOpenEmoji(!openEmoji)}
+              ref={refs.setReference}
+            >
+              <Smile size={20} />
+              {openEmoji && (
+                <div
+                  ref={refs.setFloating}
+                  style={floatingStyles}
+                  className="z-10"
+                >
+                  <EmojiPicker
+                    onEmojiClick={onEmojiClick}
+                    width={300}
+                    height={350}
+                    theme={Theme.DARK}
+                  />
+                </div>
+              )}
+            </span>
+          </div>
           <span onClick={() => mediaRef.current?.click()}>
             <Camera size={20} />
           </span>

@@ -108,3 +108,18 @@ body {
 .no-entry {
   cursor: url("../components/no-entry.svg") 16 16, not-allowed;
 }
+
+.test {
+  background-color: orange;
+  position: relative;
+  height: 100px;
+}
+
+.test::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -16px;
+  border-width: 8px;
+  border-color: #333 #333 transparent transparent;
+}
